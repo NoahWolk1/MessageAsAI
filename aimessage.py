@@ -9,14 +9,15 @@ import openai
 from imessage_reader import fetch_data
 
 
-openai.api_key = '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'
+openai.api_key = 'your openAI key'
 
 
 
 imessages = ''
 last_imessages = ''
 chat_db = "/Users/noahwolk/Library/Messages/chat.db"
-self_number = "3148138225"
+self_number = 'your phone number'
+receiving_number = 'receiving phone number'
 n = 1
 
 chat_log = []
@@ -30,7 +31,7 @@ while True:
     is_from_me = (imessages[-1]["is_from_me"])
     print(number)
     print (is_from_me)
-    if number == '+13145042974': #every new message pypasses this
+    if number == 'receiving_number': #every new message pypasses this
      print("correct number!")
      if is_from_me != 1:
       if imessages != last_imessages:
