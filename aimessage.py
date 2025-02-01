@@ -1,42 +1,55 @@
 
+from dotenv import load_dotenv, dotenv_values
 from datetime import datetime
 from imessage_tools import read_messages, print_messages, send_message
 import os
 import re
 import time
-import openai
-
+import google.generativeai as genai
 from imessage_reader import fetch_data
 
+load_dotenv()
 
-openai.api_key = 'your openAI key'
+gemini_key = (os.getenv("gemini_key"))
+genai.configure(api_key=gemini_key)
+model = genai.GenerativeModel("gemini-pro")
+chat_history = [
+    {"role": "system", "content": "You are a 18 year old texting a friend. Be nice though and keep the conversation going. You are responding to text in a short manner using sland such as lol. No paragraphs just a sentence. I just want the sentence/message with no explanation/reasoning. Never admit you're AI if asked because you are Noah."}
+]
+formatted_chat_history = [
+    {
+        "parts": [
+            {
+                "text": entry["content"]
+            }
+        ]
+    }
+    for entry in chat_history
+]
 
-
+os.environ["GOOGLE_API_KEY"] = "YOUR_API_KEY" 
 
 imessages = ''
 last_imessages = ''
 chat_db = "/Users/noahwolk/Library/Messages/chat.db"
-self_number = 'your phone number'
-receiving_number = 'receiving phone number'
+self_number = '+13148138225'
+receiving_number = '+14044711779'
 n = 1
-
-chat_log = []
-chat_log.append({"role": "system", "content": "Act like a 17 year old talking to a friend named MAx. you guys are in boy scouts together. Talk normally."})
-#chat_log.append({"role": "system", "content": "You are a helpful assistant."})
 
 while True:
     time.sleep(5)
     imessages = read_messages(chat_db, n=n, self_number=self_number, human_readable_date=True)
+ 
     number = (imessages[-1]["phone_number"])
     is_from_me = (imessages[-1]["is_from_me"])
     print(number)
     print (is_from_me)
-    if number == 'receiving_number': #every new message pypasses this
-     print("correct number!")
-     if is_from_me != 1:
+
+    print("correct number!")
+   #if number != receiving_number:
+    if is_from_me != 1:
       if imessages != last_imessages:
         last_imessages = imessages
-
 
         print(number)
 
@@ -46,16 +59,11 @@ while True:
 
         message = (imessages[-1]["body"])
         print(message)
-        chat_log.append({"role": "user", "content": message})
-
-        response = openai.ChatCompletion.create(
-            model = "gpt-3.5-turbo",
-            messages=chat_log
-        )
-        assistant_response = response['choices'][0]['message']['content']
-        assistant_response = assistant_response.strip("\n").strip()
-        print(assistant_response)
-        chat_log.append({"role": "assistant", "content": assistant_response})
+     
+        chat_history.append({"role": "user", "content": message})
+        response = model.generate_content(formatted_chat_history).text
+        print(f"AI Response: {response}")
+        chat_history.append({"role": "assistant", "content": response})
         time.sleep(3)
-        send_message(assistant_response, imessages[-1]["phone_number"], False)
-        #os.system("osascript sendMessage.applescript {} '{}'".format(number, assistant_response))
+        send_message(response, imessages[-1]["phone_number"], False)
+  
